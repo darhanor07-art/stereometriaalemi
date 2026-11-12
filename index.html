@@ -3270,13 +3270,37 @@ function sample(){
   }
   return sampleP;
 }
+/* Claude қолжетімсіз жерде (жай хостинг): жауап сайттың өз материалынан — анықтамалар мен тест түсіндірмелерінен ізделеді */
+var KB = null, FIGN = { cube:'Куб', cone:'Конус', cylinder:'Цилиндр', sphere:'Сфера' };
+function stems(t){ return (String(t).toLowerCase().match(/[a-zа-яәғқңөұүһіё0-9]+/gi) || []).filter(function(w){ return w.length > 2; }).map(function(w){ return w.slice(0, 5); }); }
+function kb(){
+  if (KB) return KB; KB = [];
+  var C = window.STEREO_CONFIG || {}, th = C.theory || {}, ts = C.tests || {};
+  Object.keys(FIGN).forEach(function(f){
+    ((th[f] || {}).terms || []).forEach(function(x){ if (x && x[0] && x[1]) KB.push({ k:stems(FIGN[f] + ' ' + x[0]), b:stems(x[1]), a:FIGN[f] + ' — ' + x[0] + ': ' + x[1] }); });
+    (ts[f] || []).forEach(function(x){ if (x && x.q && x.why) KB.push({ k:stems(FIGN[f] + ' ' + x.q), b:stems(x.why), a:x.q + ' ' + x.a[x.ok] + '. ' + x.why }); });
+    var intro = [].concat((th[f] || {}).intro || []); if (intro[0]) KB.push({ k:stems(FIGN[f] + ' дегеніміз не туралы'), b:stems(intro[0]), a:String(intro[0]) });
+  });
+  return KB;
+}
+function localAnswer(q){
+  var STOP = ['қалай','табыл','неге','тең','қай','қанда','форму','деген','неше','арқыл','болад','айтшы','есепт'];
+  var qs = stems(q).filter(function(w){ return STOP.indexOf(w) < 0; }), best = [];
+  kb().forEach(function(e){
+    var sc = 0; qs.forEach(function(w){ if (e.k.indexOf(w) >= 0) sc += 2; else if (e.b.indexOf(w) >= 0) sc += 1; });
+    if (sc >= 3) best.push([sc, e.a]);
+  });
+  best.sort(function(x, y){ return y[0] - x[0]; });
+  if (best.length) return best.slice(0, 2).map(function(x){ return x[1]; }).join('\n\n');
+  return 'Бұл сұраққа сайттың өз материалынан жауап таба алмадым. Куб, конус, цилиндр немесе сфера туралы сұрап көр: мысалы «конустың көлемі», «цилиндрдің бүйір беті», «сфераның ауданы».';
+}
 function add(cls, text){ var d = document.createElement('div'); d.className = 'cb-m ' + cls; d.textContent = text; log.appendChild(d); log.scrollTop = log.scrollHeight; return d; }
 function setBusy(b){ busy = b; send.disabled = b; send.textContent = b ? 'Күте тұр…' : 'Жіберу'; }
 function ask(q){
   add('u', q); setBusy(true);
   var bubble = add('a', 'Ойланып жатыр…');
   sample().then(function(s){
-    if (!s){ bubble.className = 'cb-m e'; bubble.textContent = 'Чат-бот бұл жерде қолжетімсіз. Ол тек сайт claude.ai ішінде ашылғанда және сен claude.ai-ға кірген кезде жұмыс істейді.'; setBusy(false); return; }
+    if (!s){ bubble.textContent = localAnswer(q); setBusy(false); try { ta.focus(); } catch(e){} return; }
     var msgs = hist.slice(-12).concat([{ role:'user', content:q }]);
     msgs[0] = { role:'user', content:RULES + '\n\n' + msgs[0].content };
     ctrl = window.AbortController ? new AbortController() : null;
@@ -3306,7 +3330,6 @@ function open(){
   if (isOpen) return; isOpen = true; prevFocus = document.activeElement;
   inertOthers(true); root.hidden = false;
   if (!log.children.length) add('n', 'Сәлем! Мен осы сайттың чат-ботымын. Стереометрия туралы да, басқа тақырыпта да сұрай бер.');
-  sample().then(function(s){ if (!s && isOpen && !root.querySelector('.cb-m.e')) add('e', 'Ескерту: чат-бот бұл жерде қолжетімсіз. Ол тек сайт claude.ai ішінде ашылғанда және сен claude.ai-ға кірген кезде жұмыс істейді.'); });
   try { ta.focus({ preventScroll:true }); } catch(e){}
 }
 function close(){
