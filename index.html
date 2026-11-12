@@ -1362,6 +1362,7 @@ html.need-auth #app{visibility:hidden}
     <button class="mdr-item fig-only mdr-reset" type="button"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.6 8 A5.4 5.4 0 1 0 4.2 4.15"/><path d="M3.8 1.6 V4.6 H6.8"/></svg><span>Басынан бастау</span></button>
     <button class="mdr-item mdr-out" type="button"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 2.5 H3 V13.5 H6.5"/><path d="M10 5 L13 8 L10 11"/><path d="M13 8 H6"/></svg><span>Шығу</span></button>
     <a class="mdr-item mdr-authors" href="#authors" draggable="false"><svg viewBox="0 0 16 15" aria-hidden="true"><circle cx="5.6" cy="4.6" r="2.3"/><path d="M1.2 13.2 C1.5 10.4 3.2 8.8 5.6 8.8 C8 8.8 9.7 10.4 10 13.2"/><circle cx="11.4" cy="5.4" r="1.9"/><path d="M11.2 9.2 C13.2 9.2 14.5 10.5 14.8 12.6"/></svg><span>Авторлар</span></a>
+    <button class="mdr-item mdr-chat" type="button"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3 H14 V11 H8 L5 14 V11 H2 Z"/><path d="M5 6 H11 M5 8.4 H9"/></svg><span>Чат-бот</span></button>
     <button class="mdr-item mdr-cert" type="button" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="6" r="4.2"/><path d="M5.6 9.4 L4.6 14.6 L8 13 L11.4 14.6 L10.4 9.4"/><path d="M6.4 6 L7.6 7.1 L9.8 4.9"/></svg><span>Сертификат</span></button>
   </div>
   <button class="mdr-tog" type="button" aria-expanded="false" aria-controls="mdr-items" aria-label="Мәзірді ашу"><span></span><span></span></button>
@@ -3209,6 +3210,121 @@ addEventListener('popstate', function(){ if (isOpen && location.hash !== '#games
 new MutationObserver(function(){ if (isOpen && html.classList.contains('need-auth')) close(true); }).observe(html, { attributes:true, attributeFilter:['class'] });
 addEventListener('load', function(){ if (location.hash === '#games' && !html.classList.contains('need-auth')) open(true); });
 window.STEREO_GAMES = { open:function(f){ if (f) fig = f; open(); }, close:function(){ close(); }, play:function(f, i){ fig = f; open(); openGame(data().list[f][i], i); } };
+})();
+</script>
+
+<!-- ============ ЧАТ-БОТ: мәзірдегі «Чат-бот»; сұрақтар Claude-қа жіберіледі (тек claude.ai ішінде жұмыс істейді) ============ -->
+<style>
+.cb{position:fixed;inset:0;z-index:61;display:flex;justify-content:flex-end;background:rgba(4,7,13,.55);color:#f4f6fb;font-family:'Inter S',-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.5}
+.cb[hidden]{display:none}
+.cb *{box-sizing:border-box}
+.cb :focus-visible{outline:2px solid #edff39;outline-offset:2px;border-radius:8px}
+.cb-box{width:min(440px,100%);height:100%;display:flex;flex-direction:column;background:#0f141d;border-left:1px solid rgba(255,255,255,.14);box-shadow:-24px 0 60px rgba(0,0,0,.5);animation:cbIn .35s var(--ease-out) both;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@keyframes cbIn{from{transform:translateX(100%)}to{transform:none}}
+.cb-top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.12)}
+.cb-top h2{margin:0;font-size:18px;font-weight:400}
+.cb-top p{margin:2px 0 0;font-size:12.5px;color:#c3cbd8}
+.cb-x{flex:none;width:44px;height:44px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.18);border-radius:50%;background:transparent;color:#fff;cursor:pointer}
+.cb-x svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.cb-log{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:16px;display:flex;flex-direction:column;gap:10px}
+.cb-m{max-width:88%;padding:10px 13px;border-radius:14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.cb-m.u{align-self:flex-end;background:#edff39;color:#10190c;border-bottom-right-radius:4px}
+.cb-m.a{align-self:flex-start;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-bottom-left-radius:4px}
+.cb-m.n{align-self:center;max-width:100%;background:none;color:#c3cbd8;font-size:13.5px;text-align:center}
+.cb-m.e{align-self:flex-start;border:1px solid rgba(255,138,122,.5);color:#ffb3a8}
+.cb-form{display:flex;gap:8px;align-items:flex-end;padding:12px 16px;border-top:1px solid rgba(255,255,255,.12)}
+.cb-form textarea{flex:1;min-width:0;min-height:44px;max-height:140px;padding:10px 12px;border:1px solid rgba(255,255,255,.2);border-radius:12px;background:rgba(0,0,0,.25);color:#fff;font:inherit;resize:none}
+.cb-form textarea::placeholder{color:rgba(225,234,240,.5)}
+.cb-send{flex:none;min-height:44px;padding:0 16px;border:0;border-radius:999px;background:#edff39;color:#10190c;font:inherit;font-size:14px;cursor:pointer}
+.cb-send:disabled,.cb-form textarea:disabled{opacity:.5;cursor:default}
+@media (prefers-reduced-motion:reduce){ .cb-box{animation:none} }
+</style>
+<div class="cb" id="chatbot" role="dialog" aria-modal="true" aria-labelledby="cb-h" hidden>
+  <div class="cb-box">
+    <header class="cb-top">
+      <div><h2 id="cb-h">Чат-бот</h2><p>Кез келген сұрағыңды жаз: жауапты Claude береді</p></div>
+      <button class="cb-x" type="button" aria-label="Чатты жабу"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2 L12 12 M12 2 L2 12"/></svg></button>
+    </header>
+    <div class="cb-log" role="log" aria-live="polite" aria-label="Хабарламалар"></div>
+    <form class="cb-form">
+      <textarea rows="1" maxlength="2000" placeholder="Сұрағыңды жаз…" aria-label="Сұрақ"></textarea>
+      <button class="cb-send" type="submit">Жіберу</button>
+    </form>
+  </div>
+</div>
+<script>
+/* ЧАТ-БОТ. Сұрақ claude.ai-дың «sample» мүмкіндігі арқылы Claude-қа жіберіледі. Бұл мүмкіндік тек сайт claude.ai артефакты ретінде
+   ашылғанда және көрермен claude.ai-ға кірген кезде бар. Басқа хостингте (мысалы GitHub Pages) чат «қолжетімсіз» деп хабарлайды:
+   бетке API кілтін салуға болмайды, оны кез келген адам көріп алады. */
+(function(){
+'use strict';
+var root = document.getElementById('chatbot'); if (!root) return;
+var log = root.querySelector('.cb-log'), form = root.querySelector('.cb-form'), ta = form.querySelector('textarea'), send = form.querySelector('.cb-send'), btnX = root.querySelector('.cb-x');
+var isOpen = false, prevFocus = null, inerted = [], hist = [], busy = false, sampleP = null, ctrl = null;
+var RULES = 'Сен «Стереометрия әлемі» оқу сайтының ішіндегі көмекші чат-ботсың. Сайт куб, конус, цилиндр және сфераны оқытады, бірақ оқушы кез келген тақырыпта сұрай алады: кез келген сұраққа жауап бер. Әдепкіде қазақ тілінде жауап бер; оқушы басқа тілде жазса, сол тілде жауап бер. Жауабың қысқа әрі түсінікті болсын, формулаларды жай мәтінмен жаз (мысалы S = 2πr(r + h)), Markdown белгілерін қолданба.';
+function sample(){
+  if (!sampleP){
+    var c = window.claude;
+    sampleP = (c && typeof c.use === 'function') ? c.use('sample').catch(function(){ return null; }) : Promise.resolve(null);
+  }
+  return sampleP;
+}
+function add(cls, text){ var d = document.createElement('div'); d.className = 'cb-m ' + cls; d.textContent = text; log.appendChild(d); log.scrollTop = log.scrollHeight; return d; }
+function setBusy(b){ busy = b; send.disabled = b; send.textContent = b ? 'Күте тұр…' : 'Жіберу'; }
+function ask(q){
+  add('u', q); setBusy(true);
+  var bubble = add('a', 'Ойланып жатыр…');
+  sample().then(function(s){
+    if (!s){ bubble.className = 'cb-m e'; bubble.textContent = 'Чат-бот бұл жерде қолжетімсіз. Ол тек сайт claude.ai ішінде ашылғанда және сен claude.ai-ға кірген кезде жұмыс істейді.'; setBusy(false); return; }
+    var msgs = hist.slice(-12).concat([{ role:'user', content:q }]);
+    msgs[0] = { role:'user', content:RULES + '\n\n' + msgs[0].content };
+    ctrl = window.AbortController ? new AbortController() : null;
+    return s(msgs, { cache:false, signal:ctrl ? ctrl.signal : undefined, onText:function(u){ if (u && u.text){ bubble.textContent = u.text; log.scrollTop = log.scrollHeight; } } }).then(function(r){
+      var t = (r && r.text || '').trim() || 'Жауап бос келді.';
+      bubble.textContent = t + (r && r.truncated ? ' …' : '');
+      hist.push({ role:'user', content:q }, { role:'assistant', content:t });
+    }, function(err){
+      var code = err && err.code;
+      bubble.className = 'cb-m e';
+      bubble.textContent = code === 'cancelled' ? 'Жауап тоқтатылды.' : code === 'rate_limited' ? 'Сұрақ тым жиі жіберілді. Сәл күтіп, қайта жаз.' : code === 'not_granted' ? 'Чат-ботқа рұқсат берілмеді.' : 'Жауап алу мүмкін болмады. Сәлден кейін қайта көр.';
+    }).then(function(){ setBusy(false); try { ta.focus(); } catch(e){} });
+  });
+}
+form.addEventListener('submit', function(e){
+  e.preventDefault();
+  var q = ta.value.trim(); if (!q || busy) return;
+  ta.value = ''; ta.style.height = ''; ask(q);
+});
+ta.addEventListener('keydown', function(e){ if (e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); if (form.requestSubmit) form.requestSubmit(); else send.click(); } });
+ta.addEventListener('input', function(){ ta.style.height = ''; ta.style.height = Math.min(140, ta.scrollHeight) + 'px'; });
+function inertOthers(on){
+  if (on){ inerted = []; [].forEach.call(document.body.children, function(el){ if (el === root || el.id === 'auth' || /^(SCRIPT|STYLE|TEMPLATE|NOSCRIPT)$/.test(el.tagName) || el.inert) return; el.inert = true; inerted.push(el); }); }
+  else { inerted.forEach(function(el){ el.inert = false; }); inerted = []; }
+}
+function open(){
+  if (isOpen) return; isOpen = true; prevFocus = document.activeElement;
+  inertOthers(true); root.hidden = false;
+  if (!log.children.length) add('n', 'Сәлем! Мен осы сайттың чат-ботымын. Стереометрия туралы да, басқа тақырыпта да сұрай бер.');
+  sample().then(function(s){ if (!s && isOpen && !root.querySelector('.cb-m.e')) add('e', 'Ескерту: чат-бот бұл жерде қолжетімсіз. Ол тек сайт claude.ai ішінде ашылғанда және сен claude.ai-ға кірген кезде жұмыс істейді.'); });
+  try { ta.focus({ preventScroll:true }); } catch(e){}
+}
+function close(){
+  if (!isOpen) return; isOpen = false; root.hidden = true; inertOthers(false);
+  try { if (ctrl && busy) ctrl.abort(); } catch(e){}
+  try { if (prevFocus && document.contains(prevFocus)) prevFocus.focus({ preventScroll:true }); } catch(e){}
+}
+btnX.addEventListener('click', close);
+root.addEventListener('click', function(e){ if (e.target === root) close(); });
+document.addEventListener('keydown', function(e){
+  if (!isOpen) return;
+  if (e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); close(); return; }
+  if (!root.contains(e.target)) e.stopPropagation();
+}, true);
+['keydown', 'pointerdown', 'wheel', 'touchstart', 'touchend'].forEach(function(ev){ root.addEventListener(ev, function(e){ e.stopPropagation(); }, { passive:true }); });
+document.addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('.mdr-chat'); if (b) open(); });
+new MutationObserver(function(){ if (isOpen && document.documentElement.classList.contains('need-auth')) close(); }).observe(document.documentElement, { attributes:true, attributeFilter:['class'] });
+window.STEREO_CHAT = { open:open, close:close, isOpen:function(){ return isOpen; } };
 })();
 </script>
 
