@@ -6587,7 +6587,7 @@ window.STEREO_BOOT = function(){
   }
   addEventListener('pointerdown', function(e){
     if (!canSwipe() || e.button > 0 || e.isPrimary === false) return;
-    if (e.target.closest && e.target.closest('.mdr, .fp-top a, .fp-top button, .masthead, .logo, .fp-cut, .dn')) return;
+    if (e.target.closest && e.target.closest('.mdr, .fp-top a, .fp-top button, .masthead, .logo, .fp-cut, .dn, .fp-door')) return;   /* есікті басу — свайп емес: әйтпесе саусақ сәл жылжыса, есік өшіп, басу жоғалады */
     sw = { id:e.pointerId, x0:e.clientX, y0:e.clientY, x:e.clientX, t:performance.now(), v:0, on:false };
   });
   addEventListener('pointermove', function(e){
